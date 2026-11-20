@@ -89,6 +89,15 @@ struct EnglishDatesTests {
         #expect(AppDates.locale.region == native.region)
     }
 
+    @Test func messagesKeepEnglishDatesAndRelativeTimes() {
+        let now = Date()
+        let recent = now.addingTimeInterval(-121 * 60)
+        let older = now.addingTimeInterval(-3 * 86_400)
+
+        #expect(AgentMessages.ago(recent) == "2 h ago")
+        #expect(AgentMessages.ago(older) == AppDates.string(from: older, dateStyle: .medium, timeStyle: .none))
+    }
+
     @Test func theLanguageBecomesEnglishAndTheRegionStays() {
         #expect(EnglishDates.identifier(system: "fr_FR") == "en_FR")
         #expect(EnglishDates.identifier(system: "de_DE") == "en_DE")
