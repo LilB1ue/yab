@@ -35,7 +35,12 @@ public enum EnglishDates {
     static func apply(system: String?, defaults: UserDefaults, domain: String) {
         guard let wanted = identifier(system: system) else { return }
         #if os(macOS)
-        if wanted != system, defaults.persistentDomain(forName: domain)?["AppleLocale"] as? String == wanted {
+        guard wanted != system,
+              let stored = defaults.persistentDomain(forName: domain)?["AppleLocale"] as? String else { return }
+        // The old override included only English, the region at the time, and optional ICU keywords.
+        let base = stored.prefix { $0 != "@" }
+        let region = Locale(identifier: String(base)).region
+        if base == "en" || region.map({ base == "en_\($0.identifier)" }) == true {
             defaults.removeObject(forKey: "AppleLocale")
         }
         #else

@@ -52,13 +52,24 @@ struct EnglishDatesTests {
         #expect(defaults.bool(forKey: "unrelated"))
     }
 
-    @Test func startupPreservesADifferentAppLocale() throws {
+    @Test(arguments: ["en_TW", "en_TW@calendar=japanese"])
+    func startupRemovesTheOldOverrideAfterTheRegionChanges(_ stored: String) throws {
         let name = "EnglishDatesTests." + UUID().uuidString
         let defaults = try #require(UserDefaults(suiteName: name))
         defer { defaults.removePersistentDomain(forName: name) }
-        defaults.set("fr_FR", forKey: "AppleLocale")
+        defaults.set(stored, forKey: "AppleLocale")
+        EnglishDates.apply(system: "ja_JP", defaults: defaults, domain: name)
+        #expect(defaults.persistentDomain(forName: name)?["AppleLocale"] == nil)
+    }
+
+    @Test(arguments: ["fr_FR", "en_US_POSIX", "en-GB"])
+    func startupPreservesADifferentAppLocale(_ stored: String) throws {
+        let name = "EnglishDatesTests." + UUID().uuidString
+        let defaults = try #require(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(stored, forKey: "AppleLocale")
         EnglishDates.apply(system: "zh_TW", defaults: defaults, domain: name)
-        #expect(defaults.string(forKey: "AppleLocale") == "fr_FR")
+        #expect(defaults.string(forKey: "AppleLocale") == stored)
     }
 
     @Test(.enabled(if: Calendar.current.identifier == .gregorian, "This display fixture uses a Gregorian October date"))
